@@ -2,6 +2,7 @@
 
 -- i'm too cheap to buy an good obfuscator 
 -- and most of the features is not completed yet soo
+-- looks shit ik but idc atleast it work
 local eleriumremake = {}
 function eleriumremake:DraggingEnabled(frame, parent)
 	parent = parent or frame
@@ -817,7 +818,7 @@ local client = {
 	doorAddedFunction = getconnections(game:GetService"CollectionService":GetInstanceAddedSignal("Door"))[1].Function;
 	remoteid = {
 		punch = getconstant(getupvalue(require(game:GetService("ReplicatedStorage").Game.DefaultActions).punchButton.onPressed,1).attemptPunch, 16);
-		taser = tostring(getconstant(require(game:GetService("ReplicatedStorage").Game.Item.Taser).Tase, 46)) .. (tostring(getconstant(require(game:GetService("ReplicatedStorage").Game.Item.Taser).Tase, 48))):sub(2, 6):reverse() .. "" .. tostring(getconstant(require(game:GetService("ReplicatedStorage").Game.Item.Taser).Tase, 51));
+		taser = tostring(getconstant(require(game:GetService("ReplicatedStorage").Game.Item.Taser).Tase, 46)) .. (tostring(getconstant(require(game:GetService("ReplicatedStorage").Game.Item.Taser).Tase, 48))):sub(2, 6):reverse() .. "" .. tostring(getconstant(require(game:GetService("ReplicatedStorage").Game.Item.Taser).Tase, 51)); -- not updated cuz im lazy
 	};
 	activeaction = {};
 	ori = {
@@ -1052,7 +1053,7 @@ client.notInWall = (function(i,v,wallCheck)
         return true
     end
 end)
-client.isEnemies = (function(p1,p2) -- from ice tray v3 cuz i'm just too lazy to make one lmao sorry :<
+client.isEnemies = (function(p1,p2) 
 	p1 = tostring(p1)
     p2 = tostring(p2)
     if p1 and p2 then
