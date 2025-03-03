@@ -1211,7 +1211,6 @@ task.spawn(function()
 end)
 
 
--- hi if you seeing this you succesfully deobfuscate my jailbreak script because it was actually on purpose because obfuscator is expensive plus we cannot afford to buy good obfuscator :>
 
 local ui =eleriumremake.SetupUI("very epic secret jailbreak dev tool real 100%")
 
