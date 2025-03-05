@@ -1,6 +1,6 @@
 
 
-
+-- hey guys look an skidder has just opened my jb source trying to skid it !!!!
 -- i'm too cheap to buy an good obfuscator 
 -- and most of the features is not completed yet soo
 -- looks shit ik but idc atleast it work
@@ -755,7 +755,7 @@ local toggle = section.NewToggle("ahahaha", function(a)
 end)
 --]]
 getgenv().debugOutput = false
-local key = loadstring(game:HttpGet('https://raw.githubusercontent.com/Introvert1337/RobloxReleases/refs/heads/main/Scripts/Jailbreak/KeyFetcher.lua'))() -- credits to introvert1337 for realesing this epic key fetcher!!!
+local key, jbremote = loadstring(game:HttpGet('https://raw.githubusercontent.com/Introvert1337/RobloxReleases/refs/heads/main/Scripts/Jailbreak/KeyFetcher.lua'))() -- credits to introvert1337 for realesing this epic key fetcher!!!
 configs = {
     player = {
 		walktog = false;
@@ -804,9 +804,11 @@ configs = {
 		nobulletg = false;
 		alwaysauto = false;
 		alwaysheadshot = false;
+		pistolswat = false;
 		silentaim = {
 			enabled = false;
 			includetaser = false;
+			includeplasma = false;
 			radius = 250;
 			wallcheck = false;
 			fovcirc = false;
@@ -837,11 +839,13 @@ local client = {
 	};
 	activeaction = {};
 	ori = {
+		plasmashootother = require(game:GetService("ReplicatedStorage").Game.Item.PlasmaGun).ShootOther;
+		pistolsetupmodel = require(game:GetService("ReplicatedStorage").Game.Item.Pistol).SetupModel;
 		rayignore = require(game:GetService("ReplicatedStorage").Module.RayCast).RayIgnoreNonCollideWithIgnoreList;
 		shoot = require(game:GetService("ReplicatedStorage").Game.Item.Gun).Shoot;
 		attemptToggleCrawling = getupvalue(require(game:GetService("ReplicatedStorage").Game.DefaultActions).crawlButton.onPressed,1).attemptToggleCrawling;
 	};
-	jbremote = getupvalue(getupvalue(require(game:GetService("ReplicatedStorage").Game.DefaultActions).punchButton.onPressed,1).attemptPunch,6); -- i can get this remote by getgc but this is better 
+	--jbremote = getupvalue(getupvalue(require(game:GetService("ReplicatedStorage").Game.DefaultActions).punchButton.onPressed,1).attemptPunch,6); -- i can get this remote by getgc but this is better 
 	playerutil = require(game:GetService("ReplicatedStorage").Game.PlayerUtils);
 	actionbuttonservice = require(game:GetService("ReplicatedStorage").ActionButton.ActionButtonService);
 	settingss = require(game:GetService("ReplicatedStorage").Resource.Settings);
@@ -850,8 +854,10 @@ local client = {
 	alexchassis = require(game:GetService("ReplicatedStorage").Module.AlexChassis);
 	itemgun = require(game:GetService("ReplicatedStorage").Game.Item.Gun);
 	itemsys = require(game:GetService("ReplicatedStorage").Game.ItemSystem.ItemSystem);
+	pistolitem = require(game:GetService("ReplicatedStorage").Game.Item.Pistol);
 	circleac = require(game:GetService("ReplicatedStorage").Module.UI).CircleAction;
 	tase = require(game:GetService("ReplicatedStorage").Game.Item.Taser).Tase;
+	plasmagun = require(game:GetService("ReplicatedStorage").Game.Item.PlasmaGun);
 	duck = require(game:GetService("ReplicatedStorage").Game.Robbery.TombRobbery.TombRobberySystem).duck;
 	onvehicleentered = require(game:GetService("ReplicatedStorage").Vehicle.VehicleUtils).OnVehicleEntered;
 	onvehicleexited = require(game:GetService("ReplicatedStorage").Vehicle.VehicleUtils).OnVehicleExited;
@@ -859,9 +865,11 @@ local client = {
 	onlocalitemunequipped = require(game:GetService("ReplicatedStorage").Game.ItemSystem.ItemSystem).OnLocalItemUnequipped;
 	bulletonlocalhitplayer = require(game:GetService("ReplicatedStorage").Game.Item.Gun).BulletEmitterOnLocalHitPlayer;
 	raycast = require(game:GetService("ReplicatedStorage").Module.RayCast);
-	attemptarrest = getupvalue(getupvalue(getupvalue(getupvalue(require(game:GetService("ReplicatedStorage").App.CharacterBinder)._classAddedSignal._handlerListHead._fn, 1), 2), 1), 7);
-	attempteject = getupvalue(getupvalue(getconnections(game:GetService("CollectionService"):GetInstanceAddedSignal("VehicleSeat"))[1].Function, 1),2);
+	charactionfunc = getupvalue(getupvalue(require(game:GetService("ReplicatedStorage").App.CharacterBinder)._classAddedSignal._handlerListHead._fn, 1), 2);
+	--attemptarrest = getupvalue(getupvalue(getupvalue(getupvalue(require(game:GetService("ReplicatedStorage").App.CharacterBinder)._classAddedSignal._handlerListHead._fn, 1), 2), 1), 7);
+	--attempteject = getupvalue(getupvalue(getconnections(game:GetService("CollectionService"):GetInstanceAddedSignal("VehicleSeat"))[1].Function, 1),2);
 }
+--client.attemptarrest = getupvalue(getupvalue(client.charactionfunc, 1), 7)
 client.door = {
 	openDoor = getupvalue(getproto(getupvalue(client.doorAddedFunction, 2), 1, true)[1], 7);
 	doors = getupvalue(client.doorAddedFunction, 1);
@@ -882,16 +890,22 @@ Circle.Transparency = configs.combat.silentaim.fovtransp
 
 for i,v in next, getgc(true) do 
 	if type(v) == "table" and rawget(v,"NitroLastMax") then
-			client.nitro = v
+		client.nitro = v
 	end
 	if type(v) == "function" and islclosure(v) then
-			if tostring(getfenv(v).script) == "LocalScript" then
+		if tostring(getfenv(v).script) == "LocalScript" then
 			local infoname = tostring(getinfo(v).name) 
+			if infoname == "AttemptArrest" then 
+				client.attemptarrest = v
+			end
 			if infoname == "StartNitro" then
 				client.startnitro = v
 			end
 			if infoname == "StopNitro" then
 				client.stopnitro = v
+			end
+			if infoname:find("CheatCheck") then
+				hookfunction(v, function()  end)
 			end
 		end
 	end
@@ -922,7 +936,7 @@ client.punchCorrection = (function() -- useless tbh since punching very fast can
 			getupvalue(require(game:GetService("ReplicatedStorage").Game.DefaultActions).punchButton.onPressed,1).attemptPunch()
 		else
 			task.wait(0.3)
-			client.jbremote:FireServer(client.remoteid)
+			jbremote:FireServer(client.remoteid.punch)
 		end
 	until configs.player.alwaysp == false
 end)
@@ -1030,7 +1044,6 @@ client.spamBatonSwordSwoosh = (function()
 		local a = client.itemsys.GetLocalEquipped()
 		if a and (a.__ClassName == "Sword" or a.__ClassName == "Baton") then
 			require(game:GetService("ReplicatedStorage").Game.Item[a.__ClassName]).SwingSwoosh(a)
-			print("lunge")
 		end
 	until configs.combat.batonsword.spamswoosh == false
 end)
@@ -1039,51 +1052,10 @@ client.spamBatonSwordLunge = (function()
 		local a = client.itemsys.GetLocalEquipped()
 		if a and (a.__ClassName == "Sword" or a.__ClassName == "Baton") then
 			require(game:GetService("ReplicatedStorage").Game.Item[a.__ClassName]).SwingLunge(a)
-			print("lunge")
 		end
 	until configs.combat.batonsword.spamlunge == false
 end)
-client.getHeliRope = (function()
-	for i,v in next, game:GetService("Workspace").Vehicles:GetChildren() do
-        if v:IsA("Model") and v:FindFirstChild("Seat") and v.Seat:FindFirstChild("PlayerName") and v.Seat.PlayerName.Value == game:GetService("Players").LocalPlayer.DisplayName then
-            if v:FindFirstChild("Preset") and v.Preset:FindFirstChild("RopePull") then
-                return v.Preset.RopePull
-            end
-        end
-    end
-    return nil
-end)
-client.getNearestHeliPickup = (function(distance)
-	local char = game:GetService("Players").LocalPlayer.Character or nil
-    if char~= nil then
-        local root = char:FindFirstChild("HumanoidRootPart") or nil
-        if root~=nil then
-            local getLocalVehicle = require(game:GetService("ReplicatedStorage").Vehicle.VehicleUtils).GetLocalVehiclePacket() or nil
-            if getLocalVehicle~= nil then
-                local getHeliRope = client.getHeliRope() or nil
-                if getHeliRope~=nil then
-                    local targetPickup
-                    local vehicleLinkUtils = require(game:GetService("ReplicatedStorage").VehicleLink:WaitForChild("VehicleLinkUtils"))
-                    local geomUtils = require(game:GetService("ReplicatedStorage"):WaitForChild("Std"):WaitForChild("GeomUtils"))
-                    for i,v in next, game:GetService("CollectionService"):GetTagged("HeliPickup") do
-                        if v ~= getLocalVehicle.Model then
-                            local getPrimaryPart = vehicleLinkUtils.getPrimaryPart(v)
-                            if getPrimaryPart then
-                                local mag = (getHeliRope.Position - geomUtils.closestPointInPart(getPrimaryPart,  getHeliRope.Position)).magnitude
-                                if mag < distance then
-                                    distance = mag
-                                    targetPickup = v
-                                end
-                            end
-                        end
-                    end
-                    return targetPickup
-                end 
-            end
-        end
-    end
-    return false
-end)
+
 client.notInWall = (function(i,v,wallCheck)
 	if wallCheck then
         local ray = Ray.new(game:GetService("Workspace").CurrentCamera.CFrame.p, i - game:GetService("Workspace").CurrentCamera.CFrame.p)
@@ -1093,51 +1065,39 @@ client.notInWall = (function(i,v,wallCheck)
         return true
     end
 end)
-client.isEnemies = (function(p1,p2) -- from ice tray v3 cuz i'm just too lazy to make one lmao sorry :<
-	p1 = tostring(p1)
-    p2 = tostring(p2)
-    if p1 and p2 then
-        if p1 == "Police" then
-            if p2 == "Criminal" then
-                return true
-            end
-            if p2 == "Prisoner" then
-                return false
-            end
-        end
-        if p1 == "Prisoner" then
-            if p2 == "Criminal" then
-                return false
-            end
-            if p2 == "Police" then
-                return true
-            end
-        end
-        if p1 == "Criminal" then
-            if p2 == "Prisoner" then
-                return false
-            end
-            if p2 == "Police" then
-                return true
-            end
-        end
+
+client.isEnemies = (function(a,b)
+    local a, b = tostring(a), tostring(b)
+    if a == "Criminal" and b == "Police" then
+        return true
+    elseif a == "Criminal" and b == "Prisoner" then
+        return false
+    elseif a == "Police" and b == "Criminal" then
+        return true
+    elseif a == "Police" and b == "Prisoner" then
+        return false
+    elseif a == "Prisoner" and b == "Police" then
+        return true
+    elseif a == "Prisoner" and b == "Criminal" then
+        return false
     end
 end)
 client.getNearestToCursor = (function()
-	local Closest = math.huge
     local Target = nil
 	local notInWall = client.notInWall
 	local isEnemies = client.isEnemies
     for i,v in next, game:GetService("Players"):GetPlayers() do
         if isEnemies(game:GetService("Players").LocalPlayer.Team, v.Team) and v ~= game:GetService("Players").LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health ~= 0 then
-            local Point, OnScreen = game:GetService("Workspace").CurrentCamera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
-            if OnScreen and notInWall(v.Character.HumanoidRootPart.Position,{game:GetService("Players").LocalPlayer.Character, v.Character}, configs.combat.silentaim.wallcheck) then
-                local Distance =(Vector2.new(Point.X, Point.Y) - Vector2.new(game:GetService("Players").LocalPlayer:GetMouse().X, game:GetService("Players").LocalPlayer:GetMouse().Y)).magnitude
-                if Distance <= configs.combat.silentaim.radius then
-                    Closest = Distance
-                    Target = v
-                end
-            end
+			local magnitude = (game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).magnitude
+			if magnitude <= 9e9 then
+				local Point, OnScreen = game:GetService("Workspace").CurrentCamera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
+				if OnScreen and notInWall(v.Character.HumanoidRootPart.Position,{game:GetService("Players").LocalPlayer.Character, v.Character}, configs.combat.silentaim.wallcheck) then
+					local Distance =(Vector2.new(Point.X, Point.Y) - Vector2.new(game:GetService("Players").LocalPlayer:GetMouse().X, game:GetService("Players").LocalPlayer:GetMouse().Y)).magnitude
+					if Distance <= configs.combat.silentaim.radius then
+						Target = v
+					end
+				end
+			end
         end
     end
 	print(Target)
@@ -1173,35 +1133,41 @@ client.getNearestVehicle = (function()
 	end
 	return target
 end)
-client.launchArrestAura = (function(a)
-	local isEnemies = client.isEnemies
-	local function isPlayerArrested(name)
-		for i, v in client.circleac.Specs do
-			if v.Name == "Arrest" and v.PlayerName == name then
-				return not v.ShouldArrest
-			end
+
+client.getNearestPlayerNoCuffed = (function() -- from my arrestaura script on my github cuz i'm too lazy :>
+    local maxdistance = 18
+    local player = nil;
+    for i,v in next, game:GetService("Players"):GetPlayers() do
+        if tostring(v.Team) == "Criminal" then
+            local character = v.Character or nil
+            if character ~= nil and not v.Character:GetAttribute("Handcuffs") then
+                local hrp = character:FindFirstChild("Head") or nil
+                local hum = character:FindFirstChild("Humanoid") or nil
+                if hrp ~= nil and hum ~= nil then
+                    local mag = (game:GetService("Players").LocalPlayer.Character:GetModelCFrame().Position - hrp.Position).magnitude
+                    if mag < maxdistance then
+                        player = v
+                        if player ~= nil then
+                            return player
+                        end
+                    end
+                end
+            end
+        end
+    end
+	return false
+end)
+client.launchArrestAura = (function()
+	local getNearestPlayerNoCuffed = client.getNearestPlayerNoCuffed
+	repeat task.wait(0.15)
+		local plr = getNearestPlayerNoCuffed()
+		if plr then
+				--local gle = client.itemsys.GetLocalEquipped()
+				--if gle and gle.__ClassName:find("Handcuffs") then 
+					client.attemptarrest(game:GetService("Players"):FindFirstChild(tostring(plr)))
+				--end
 		end
-		return false
-	end
-	local function getNearestPlayerNoCuffed()
-		for i,v in next, game:GetService("Players"):GetPlayers() do
-			if isEnemies(game:GetService("Players").LocalPlayer.Team, v.Team) and isPlayerArrested(tostring(v)) and v ~= game:GetService("Players").LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health ~= 0 then
-				local magnitude = (game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position-v.Character.HumanoidRootPart.Position).magnitude
-				if magnitude < 18 then
-					return v
-				end
-			end	
-		end
-		return false
-	end
-	if a then
-		repeat task.wait(.15)
-			local gle = client.itemsys.GetLocalEquipped()
-			if gle and gle.__ClassName:find("Handcuffs") then -- hehe js in case
-				print(getNearestPlayerNoCuffed())
-			end
-		until configs.combat.arrestaura.enabled == false
-	end
+	until configs.combat.arrestaura.enabled == false
 end)
 
 task.spawn(function()
@@ -1217,8 +1183,20 @@ task.spawn(function()
 		client.ori.shoot(self, a)
 	end)
 
+	client.plasmagun.ShootOther = (function(self,a)
+		if configs.combat.silentaim.enabled and configs.combat.silentaim.includeplasma then
+			local player = client.getNearestToCursor()
+			local character = player and player.Character
+			local head = character and character:FindFirstChild("Head")
+			if head then
+				self.TipDirection = (head.Position - self.Tip.Position).Unit
+			end
+		end
+		client.ori.plasmashootother(self,a)
+	end)
+
 	client.raycast.RayIgnoreNonCollideWithIgnoreList = (function(...)
-		if debug.traceback():find("Taser") and configs.combat.silentaim.includetaser then
+		if debug.traceback():find("Taser") and configs.combat.silentaim.enabled and configs.combat.silentaim.includetaser then
 			local player = client.getNearestToCursor()
 			local character = player and player.Character
 			local head = character and character:FindFirstChild("HumanoidRootPart")
@@ -1228,6 +1206,14 @@ task.spawn(function()
 		end
 		return client.ori.rayignore(...)
 	end)
+
+	client.pistolitem.SetupModel = function(self,...)
+		client.ori.pistolsetupmodel(self,...)
+		if configs.combat.pistolswat then
+			self._hasSWAT = true
+		end
+	end
+
 	game:GetService("Players").LocalPlayer:GetMouse().Move:Connect(function()
 		local Mouse = game:GetService"UserInputService":GetMouseLocation()
 		Circle.Position = Vector2.new(Mouse.X, Mouse.Y)
@@ -1288,7 +1274,7 @@ task.spawn(function()
 		if getdata(a.__ClassName, "CamShakeMagnitude") ~= nil then
 			a.Config.CamShakeMagnitude = configs.combat.nospread and 0 or getdata(a.__ClassName, "CamShakeMagnitude")
 		end
-		if a then
+		if a and a.BulletEmitter and a.BulletEmitter.GravityVector then
 			a.BulletEmitter.GravityVector = configs.combat.nobulletg and nil or Vector3.new(0, -workspace.Gravity / 10, 0)
 		end
 	end)
@@ -1435,6 +1421,16 @@ sec.NewButton("Get Police Outfit", function()
 
 end)
 sec.NewLabel("NOTE: No Circle Hold might broke/not working on some actions")
+
+--// Projectiles
+local sec = page.NewSection("Projectiles")
+sec.NewToggle("Disable Military Turret", function(a)
+	
+end, false)
+sec.NewToggle("Disable House Turret", function(a)
+	
+end, false)
+
 
 -- // Vehicle Page
 local page = ui.NewPage("Vehicle")
@@ -1610,6 +1606,9 @@ end, false)
 sec.NewToggle("Include Taser", function(a)
 	configs.combat.silentaim.includetaser = a
 end, false)
+sec.NewToggle("Include Plasma Gun", function(a)
+	configs.combat.silentaim.includetaser = a
+end, false)
 sec.NewSlider("Radius", 10, 1000, 250, false, function(a)
 	configs.combat.silentaim.radius = a
 	Circle.Radius = a
@@ -1617,7 +1616,7 @@ end)
 sec.NewToggle("Wallcheck", function(a)
 	configs.combat.silentaim.wallcheck = a
 end, false)
-sec.NewToggle("FOV Circle", function(a) -- bro awp drawing lib what happened
+sec.NewToggle("FOV Circle", function(a)
 	configs.combat.silentaim.fovcirc = a
 	Circle.Visible = a
 end, false)
@@ -1634,10 +1633,10 @@ local sec = page.NewSection("Arrest Aura")
 -- sec.NewLabel("soo expect some bugs occuring")
 sec.NewLabel("not done yet lmao")
 sec.NewToggle("Enabled", function(a)
-	-- configs.combat.arrestaura.enabled = a
-	-- if configs.combat.arrestaura.enabled then
-	-- 	client.launchArrestAura(true)
-	-- end	
+	configs.combat.arrestaura.enabled = a
+	if configs.combat.arrestaura.enabled then
+		client.launchArrestAura()
+	end	
 end, false)
 
 
