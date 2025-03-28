@@ -1,9 +1,54 @@
 
 
--- hey guys look an skidder has just opened my jb source trying to skid it !!!!
+
+-- local old = require(game:GetService("ReplicatedStorage").Module.RayCast).RayIgnoreNonCollideWithIgnoreList
+
+-- require(game:GetService("ReplicatedStorage").Module.RayCast).RayIgnoreNonCollide = (function(...)
+--     if not debug.traceback():find("TrainSystem") then
+--         print(debug.traceback())
+--         local args = {...}
+--         for i,v in next, args do
+--             print(i,v)
+--         end
+--     end
+--     return old(...)
+-- end)
+-- local update
+-- local vclass
+-- for i,v in next, getconnections(game:GetService("RunService").Heartbeat) do
+--     if v.Function and islclosure(v.Function) then
+--         if getconstants(v.Function)[4] == "Vehicle Heartbeat" then
+--             vclass = getupvalue(v.Function, 2)
+--             update = vclass.Heli.Update
+--         end
+--     end
+-- end
+
+-- vclass.Heli.Update = (function(self,...)
+--     update(self,...)
+--     self.Velocity.Velocity *= Vector3.new(30,10,30)
+-- end)
+
+
+-- getgenv().speed = 0.2
+-- getgenv().test = game:GetService("RunService").Heartbeat:connect(function()
+--     if require(game:GetService("ReplicatedStorage").Vehicle.VehicleUtils).GetLocalVehiclePacket() ~= nil then
+--         local gvp = require(game:GetService("ReplicatedStorage").Vehicle.VehicleUtils).GetLocalVehiclePacket()
+--         if gvp.Velocity then
+--             local vel = gvp.Velocity.Velocity
+--             gvp.Model:PivotTo(gvp.Model:GetPivot() + Vector3.new(vel.X * speed, vel.Y * speed, vel.Z * speed))
+--         end
+--     end
+-- end)
+-- getgenv().speed = 0
+
+-- idk what i add in this new commit but i think i added plenty of it
 -- i'm too cheap to buy an good obfuscator 
 -- and most of the features is not completed yet soo
 -- looks shit ik but idc atleast it work
+
+getgenv().isfunctionhooked = isfunctionhooked or ishooked -- delta should be supported now
+
 local eleriumremake = {}
 function eleriumremake:DraggingEnabled(frame, parent)
 	parent = parent or frame
@@ -48,7 +93,7 @@ function eleriumremake:DraggingEnabled(frame, parent)
 		end
 	end)
 end
-function eleriumremake.SetupUI(name)
+function eleriumremake.SetupUI(name, savecallback)
 
 	local ScreenGui = Instance.new("ScreenGui")
 	local Frame = Instance.new("Frame")
@@ -58,6 +103,7 @@ function eleriumremake.SetupUI(name)
 	local TopbarCornerHide = Instance.new("Frame")
 	local TopbarText = Instance.new("TextLabel")
 	local TopbarHideButton = Instance.new("ImageButton")
+	local TopbarSaveButton = Instance.new("ImageButton")
 	local PageListLine = Instance.new("Frame")
 	local PageList = Instance.new("Frame")
 	local PageListScroll = Instance.new("ScrollingFrame")
@@ -123,6 +169,16 @@ function eleriumremake.SetupUI(name)
 	TopbarHideButton.Rotation = 90.000
 	TopbarHideButton.Size = UDim2.new(0, 20, 0, 20)
 	TopbarHideButton.Image = "http://www.roblox.com/asset/?id=4731371527"
+
+	TopbarSaveButton.Name = "TopbarSaveButton"
+	TopbarSaveButton.Position = UDim2.new(0.948, 0,0.2, 0)
+	TopbarSaveButton.BackgroundTransparency = 1
+	TopbarSaveButton.Image = "rbxassetid://10734941499"
+	TopbarSaveButton.Size = UDim2.fromOffset(15, 15)
+	TopbarSaveButton.Parent = TopBar
+	TopbarSaveButton.MouseButton1Click:Connect(function()
+		savecallback()
+	end)
 
 	PageList.Name = "PageList"
 	PageList.Parent = Frame
@@ -234,16 +290,13 @@ function eleriumremake.SetupUI(name)
 		for i, v in next, tabl:GetChildren() do
 			if v.ClassName == "TextButton" then
 				v.MouseButton1Click:Connect(function()
-					print(v)
 					for i, v2 in next, tabc:GetChildren() do
 						if v2.Name == v.Name then
 							v2.Visible = true
-							print(v2)
 							--v.BackgroundColor3 = Color3.fromRGB(62,62,62)
 							--game:GetService("TweenService"):Create(v, TweenInfo.new(0.25,Enum.EasingStyle.Quad), {Size = UDim2.fromOffset(v.AbsoluteSize.X, 30)})
 						else
 							v2.Visible = false
-							print(v2)
 
 							--game:GetService("TweenService"):Create(v, TweenInfo.new(0.25,Enum.EasingStyle.Quad), {Size = UDim2.fromOffset(v.AbsoluteSize.X, 25)})
 							--v.BackrgoundColor3 = Color3.fromRGB(42,42,42)
@@ -355,7 +408,7 @@ function eleriumremake.SetupUI(name)
 			local elemet= {}
 
 			function elemet.NewToggle(name, callback, default)
-
+				local default = default or false
 				local Toggle = Instance.new("Frame")
 				local ToggleTrigger = Instance.new("TextButton")
 				local ButtonCorner = Instance.new("UICorner")
@@ -484,7 +537,7 @@ function eleriumremake.SetupUI(name)
 			end
 
 			function elemet.NewSlider(name, min, max, default, precise, callback)
-
+				local precise = precise or false
 				local Slider = Instance.new("Frame")
 				local SliderMain = Instance.new("TextButton")
 				local SliderMainCorner = Instance.new("UICorner")
@@ -580,7 +633,7 @@ function eleriumremake.SetupUI(name)
 
 				Trigger.MouseButton1Down:Connect(function()
 					isSliding = true
-					local value = Precise and  tonumber(string.format("%.2f",(((tonumber(Max_Value) - tonumber(Min_Value)) / SizeChia) * Bar.AbsoluteSize.X) + tonumber(Min_Value))) or math.floor((((tonumber(Max_Value) - tonumber(Min_Value)) / SizeChia) * Bar.AbsoluteSize.X) + tonumber(Min_Value))
+					local value = Precise and  tonumber(string.format("%.1f",(((tonumber(Max_Value) - tonumber(Min_Value)) / SizeChia) * Bar.AbsoluteSize.X) + tonumber(Min_Value))) or math.floor((((tonumber(Max_Value) - tonumber(Min_Value)) / SizeChia) * Bar.AbsoluteSize.X) + tonumber(Min_Value))
 
 					pcall(function()
 						callback(value)
@@ -588,7 +641,7 @@ function eleriumremake.SetupUI(name)
 					end)
 					Bar.Size = UDim2.new(0, math.clamp(mouse.X - Bar.AbsolutePosition.X, 0, SizeChia), 0, 20)
 					moveconnection = mouse.Move:Connect(function()   
-						local value = Precise and  tonumber(string.format("%.2f",(((tonumber(Max_Value) - tonumber(Min_Value)) / SizeChia) * Bar.AbsoluteSize.X) + tonumber(Min_Value))) or math.floor((((tonumber(Max_Value) - tonumber(Min_Value)) / SizeChia) * Bar.AbsoluteSize.X) + tonumber(Min_Value))
+						local value = Precise and  tonumber(string.format("%.1f",(((tonumber(Max_Value) - tonumber(Min_Value)) / SizeChia) * Bar.AbsoluteSize.X) + tonumber(Min_Value))) or math.floor((((tonumber(Max_Value) - tonumber(Min_Value)) / SizeChia) * Bar.AbsoluteSize.X) + tonumber(Min_Value))
 						pcall(function()
 							callback(value)
 							Sliderbox.Text = value
@@ -597,7 +650,7 @@ function eleriumremake.SetupUI(name)
 					end)
 					releaseconnection = uis.InputEnded:Connect(function(Mouse)
 						if Mouse.UserInputType == Enum.UserInputType.MouseButton1 or Mouse.UserInputType == Enum.UserInputType.Touch then
-							local value = Precise and  tonumber(string.format("%.2f",(((tonumber(Max_Value) - tonumber(Min_Value)) / SizeChia) * Bar.AbsoluteSize.X) + tonumber(Min_Value))) or math.floor((((tonumber(Max_Value) - tonumber(Min_Value)) / SizeChia) * Bar.AbsoluteSize.X) + tonumber(Min_Value))
+							local value = Precise and  tonumber(string.format("%.1f",(((tonumber(Max_Value) - tonumber(Min_Value)) / SizeChia) * Bar.AbsoluteSize.X) + tonumber(Min_Value))) or math.floor((((tonumber(Max_Value) - tonumber(Min_Value)) / SizeChia) * Bar.AbsoluteSize.X) + tonumber(Min_Value))
 
 							pcall(function()
 								callback(value)
@@ -754,8 +807,10 @@ local toggle = section.NewToggle("ahahaha", function(a)
 	print(a)
 end)
 --]]
+--game:GetService("ReplicatedStorage"):WaitForChild("SpawnSelectionUpdateSpawnData"):FireServer()
 getgenv().debugOutput = false
 local key, jbremote = loadstring(game:HttpGet('https://raw.githubusercontent.com/Introvert1337/RobloxReleases/refs/heads/main/Scripts/Jailbreak/KeyFetcher.lua'))() -- credits to introvert1337 for realesing this epic key fetcher!!!
+local oldjbremote = getupvalue(network.FireServer, 1)
 configs = {
     player = {
 		walktog = false;
@@ -768,6 +823,7 @@ configs = {
 		nosky = false;
 		nostun = false;
 		norwait = false;
+		nocslow = false;
 		nocircwait = false;
 		nopwait = false;
 		bypasskd = false;
@@ -780,6 +836,9 @@ configs = {
     vehicle = {
 		fspeed = 10;
 		ftog = false;
+		fx = 0;
+		fy = 0;
+		fz = 0; 
 		engine = false;
 		enginesp = 0;
 		brake = false;
@@ -796,8 +855,11 @@ configs = {
 		helienginesp = 0;
 		heliengine = false;
 		heliheight = false;
+		instanttow = false;
+		driveonwater = false;
 	};
     combat = {
+		hitboxradius = 3;
 		noequipt = false;
 		nospread = false;
 		norecoil = false;
@@ -805,6 +867,15 @@ configs = {
 		alwaysauto = false;
 		alwaysheadshot = false;
 		pistolswat = false;
+		snipernoblur = false;
+		snipernogui = false;
+		wallbang = false;
+		nogrenadesmoke = false;
+		tasermodz = false;
+		instantrocketseek = false;
+		forcefieldnomiss = false;
+		increasetakedowndamage = false;
+		increaseforcedamage = false;
 		silentaim = {
 			enabled = false;
 			includetaser = false;
@@ -825,11 +896,19 @@ configs = {
 		};
 	};
     teleportation = {}; -- soon not yet lmfao
-    misc = {};
+    robberies = {
+		guardnodmg = false;
+	};
     nametags = {};
-    farm = {}; -- soon not yet lmfao
 }
 local client = {
+	ropedata = {};
+	lastvehiclestats = {
+		GarageEngineSpeed = nil;
+		Height = nil;
+		TurnSpeed = nil;
+	};
+	lastvehiclemodel = nil;
 	vehicleEntered = false;
 	originalequippeddata = {};
 	doorAddedFunction = getconnections(game:GetService"CollectionService":GetInstanceAddedSignal("Door"))[1].Function;
@@ -839,13 +918,23 @@ local client = {
 	};
 	activeaction = {};
 	ori = {
+		updateseeking = require(game:GetService("ReplicatedStorage").VehicleLink.VehicleLinkBinder)._constructor._updateSeeking;
+		hittargetwithspeed = require(game:GetService("ReplicatedStorage").Module.SimulatedPhysicsProjectile).HitTargetWithSpeed;
+		isflying = require(game:GetService("ReplicatedStorage").Game.Paraglide).IsFlying;
+		tase = require(game:GetService("ReplicatedStorage").Game.Item.Taser).Tase;
+		doesplayerowncached = require(game:GetService("ReplicatedStorage").Game.Gamepass.GamepassSystem).doesPlayerOwnCached;
+		update = require(game:GetService("ReplicatedStorage").Module.UI).CircleAction.Update;
+		getequiptime = require(game:GetService("ReplicatedStorage").Game.GunShop.GunUtils).getEquipTime;
+		rayignorenon = require(game:GetService("ReplicatedStorage").Module.RayCast).RayIgnoreNonCollide;
 		plasmashootother = require(game:GetService("ReplicatedStorage").Game.Item.PlasmaGun).ShootOther;
 		pistolsetupmodel = require(game:GetService("ReplicatedStorage").Game.Item.Pistol).SetupModel;
 		rayignore = require(game:GetService("ReplicatedStorage").Module.RayCast).RayIgnoreNonCollideWithIgnoreList;
 		shoot = require(game:GetService("ReplicatedStorage").Game.Item.Gun).Shoot;
 		attemptToggleCrawling = getupvalue(require(game:GetService("ReplicatedStorage").Game.DefaultActions).crawlButton.onPressed,1).attemptToggleCrawling;
 	};
-	--jbremote = getupvalue(getupvalue(require(game:GetService("ReplicatedStorage").Game.DefaultActions).punchButton.onPressed,1).attemptPunch,6); -- i can get this remote by getgc but this is better 
+	guardnpcbinder = require(game:GetService("ReplicatedStorage").GuardNPC.GuardNPCBinder);
+	combatconst = require(game:GetService("ReplicatedStorage").Combat.CombatConsts);
+	combatutils = require(game:GetService("ReplicatedStorage").Combat.CombatUtils);
 	playerutil = require(game:GetService("ReplicatedStorage").Game.PlayerUtils);
 	actionbuttonservice = require(game:GetService("ReplicatedStorage").ActionButton.ActionButtonService);
 	settingss = require(game:GetService("ReplicatedStorage").Resource.Settings);
@@ -854,9 +943,12 @@ local client = {
 	alexchassis = require(game:GetService("ReplicatedStorage").Module.AlexChassis);
 	itemgun = require(game:GetService("ReplicatedStorage").Game.Item.Gun);
 	itemsys = require(game:GetService("ReplicatedStorage").Game.ItemSystem.ItemSystem);
+	gunutil = require(game:GetService("ReplicatedStorage").Game.GunShop.GunUtils);
+	gamepasssystem = require(game:GetService("ReplicatedStorage").Game.Gamepass.GamepassSystem);
 	pistolitem = require(game:GetService("ReplicatedStorage").Game.Item.Pistol);
+	smokegrenadeitem = require(game:GetService("ReplicatedStorage").Game.SmokeGrenade.SmokeGrenade);
 	circleac = require(game:GetService("ReplicatedStorage").Module.UI).CircleAction;
-	tase = require(game:GetService("ReplicatedStorage").Game.Item.Taser).Tase;
+	tase = require(game:GetService("ReplicatedStorage").Game.Item.Taser);
 	plasmagun = require(game:GetService("ReplicatedStorage").Game.Item.PlasmaGun);
 	duck = require(game:GetService("ReplicatedStorage").Game.Robbery.TombRobbery.TombRobberySystem).duck;
 	onvehicleentered = require(game:GetService("ReplicatedStorage").Vehicle.VehicleUtils).OnVehicleEntered;
@@ -864,16 +956,15 @@ local client = {
 	onlocalitemequipped = require(game:GetService("ReplicatedStorage").Game.ItemSystem.ItemSystem).OnLocalItemEquipped;
 	onlocalitemunequipped = require(game:GetService("ReplicatedStorage").Game.ItemSystem.ItemSystem).OnLocalItemUnequipped;
 	bulletonlocalhitplayer = require(game:GetService("ReplicatedStorage").Game.Item.Gun).BulletEmitterOnLocalHitPlayer;
+	vehiclelinkbinder = require(game:GetService("ReplicatedStorage").VehicleLink.VehicleLinkBinder);
 	raycast = require(game:GetService("ReplicatedStorage").Module.RayCast);
-	charactionfunc = getupvalue(getupvalue(require(game:GetService("ReplicatedStorage").App.CharacterBinder)._classAddedSignal._handlerListHead._fn, 1), 2);
-	--attemptarrest = getupvalue(getupvalue(getupvalue(getupvalue(require(game:GetService("ReplicatedStorage").App.CharacterBinder)._classAddedSignal._handlerListHead._fn, 1), 2), 1), 7);
-	--attempteject = getupvalue(getupvalue(getconnections(game:GetService("CollectionService"):GetInstanceAddedSignal("VehicleSeat"))[1].Function, 1),2);
 }
---client.attemptarrest = getupvalue(getupvalue(client.charactionfunc, 1), 7)
 client.door = {
 	openDoor = getupvalue(getproto(getupvalue(client.doorAddedFunction, 2), 1, true)[1], 7);
 	doors = getupvalue(client.doorAddedFunction, 1);
 }
+client.hittargetwithspeed = require(game:GetService("ReplicatedStorage").Module.SimulatedPhysicsProjectile).HitTargetWithSpeed
+
 
 local itemConfigClone = game:GetService("ReplicatedStorage").Game.ItemConfig:Clone()
 itemConfigClone.Name = "ItemConfigBackup"
@@ -888,23 +979,24 @@ Circle.Filled = false
 Circle.Transparency = configs.combat.silentaim.fovtransp
 --Circle.Visible = true
 
-for i,v in next, getgc(true) do 
-	if type(v) == "table" and rawget(v,"NitroLastMax") then
-		client.nitro = v
-	end
+for i,v in next, getgc() do 
 	if type(v) == "function" and islclosure(v) then
 		if tostring(getfenv(v).script) == "LocalScript" then
 			local infoname = tostring(getinfo(v).name) 
+			if getconstants(v)[3] == "StartRagdolling" then
+				client.stunnedragdoll = v
+			end
 			if infoname == "AttemptArrest" then 
 				client.attemptarrest = v
 			end
 			if infoname == "StartNitro" then
 				client.startnitro = v
+				client.nitro = getupvalue(v, 8)
 			end
 			if infoname == "StopNitro" then
 				client.stopnitro = v
 			end
-			if infoname:find("CheatCheck") then
+			if infoname:find("CheatCheck") then -- shit didn't work
 				hookfunction(v, function()  end)
 			end
 		end
@@ -916,6 +1008,10 @@ for i,v in next, getconnections(game:GetService("RunService").Heartbeat) do
         if getconstants(v.Function)[13] == "Time/UI" then
             client.walkspeedfun = getupvalue(v.Function,6)
         end
+		if getconstants(v.Function)[3] == "Vehicle Heartbeat" then
+			client.heli = getupvalue(v.Function,1).Heli
+			client.ori.heliupdate = client.heli.Update
+		end
     end
 end
 
@@ -964,18 +1060,18 @@ client.flipCorrection = (function()
 		end)
 	until configs.vehicle.autoflip == false
 end)
+-- lowkey i hate how hookfunction looks
 client.hasKeyCorrection = (function(boolean)
 	if boolean then
 		hookfunction(client.playerutil.hasKey, function()
 			return true
 		end)
 	else
-		if isfunctionhooked(client.playerutil.hasKey) then restorefunction(client.playerutil.hasKey) end -- i had to use isfunctionhooked soo it will work on other executor like awp
+		if isfunctionhooked(client.playerutil.hasKey) then restorefunction(client.playerutil.hasKey) end
 	end
 end)
 client.headshotCorrection = (function(boolean)
 	if boolean then
-		local epichook
 		epichook = hookfunction(client.bulletonlocalhitplayer, function(...)
 			local bulletshot = {...}
 			bulletshot[15].isWallbang = false
@@ -984,6 +1080,13 @@ client.headshotCorrection = (function(boolean)
 		end)
 	else
 		if isfunctionhooked(client.bulletonlocalhitplayer) then restorefunction(client.bulletonlocalhitplayer) end
+	end
+end)
+client.smokeGrenadeHook = (function(boolean)
+	if boolean then
+		hookfunction(client.smokegrenadeitem._playExplosionFx, function() end)
+	else
+		if isfunctionhooked(client.smokegrenadeitem._playExplosionFx) then restorefunction(client.smokegrenadeitem._playExplosionFx) end
 	end
 end)
 client.isCrawlingCorrection = (function()
@@ -1005,13 +1108,15 @@ client.launchVehicleFlight = (function()
 	local UIS = game:GetService("UserInputService")
 	local Camera = workspace.CurrentCamera
 	BodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-	game:GetService("RunService").Heartbeat:Connect(function()
-		BodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-		BodyGyro.D = 50000
-		BodyGyro.P = 150000000
-		--BodyGyro.CFrame = Camera.CFrame
-	end)
+	BodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+	BodyGyro.D = 50000
+	BodyGyro.P = 1500000000
+	-- game:GetService("RunService").Heartbeat:Connect(function()
+	-- 	BodyGyro.CFrame = Camera.CFrame * CFrame.Angles(math.rad(configs.vehicle.fx), math.rad(configs.vehicle.fy), math.rad(configs.vehicle.fz))
+	-- end)
 	repeat task.wait()
+		BodyGyro.CFrame = Camera.CFrame * CFrame.Angles(math.rad(configs.vehicle.fx), math.rad(configs.vehicle.fy), math.rad(configs.vehicle.fz))
+		workspace.CurrentCamera.CameraType = Enum.CameraType.Track
 		BodyVelocity.Velocity = Vector3.new()
 		if UIS:IsKeyDown(Enum.KeyCode.W) then
 			BodyVelocity.Velocity = BodyVelocity.Velocity + Camera.CFrame.LookVector
@@ -1027,6 +1132,7 @@ client.launchVehicleFlight = (function()
 		end
 		BodyVelocity.Velocity = BodyVelocity.Velocity * configs.vehicle.fspeed
 	until client.vehicleEntered == false or configs.vehicle.ftog == false
+	workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
 	BodyGyro:Destroy()
 	BodyVelocity:Destroy()
 end)
@@ -1082,25 +1188,31 @@ client.isEnemies = (function(a,b)
         return false
     end
 end)
-client.getNearestToCursor = (function()
+-- client.setPlayerHitboxRadius = (function(rad)
+-- 	for i,v in next, game:GetService("Players"):GetPlayers() do
+-- 		if isEnemies(game:GetService("Players").LocalPlayer.Team, v.Team) and v ~= game:GetService("Players").LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+-- 			client.combatutils.setRootPartHitRadius(v.Character.HumanoidRootPart, rad)
+-- 		end
+-- 	end
+-- end)
+client.getNearestToCursor = (function() -- unoptimized
     local Target = nil
 	local notInWall = client.notInWall
 	local isEnemies = client.isEnemies
     for i,v in next, game:GetService("Players"):GetPlayers() do
         if isEnemies(game:GetService("Players").LocalPlayer.Team, v.Team) and v ~= game:GetService("Players").LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health ~= 0 then
 			local magnitude = (game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).magnitude
-			if magnitude <= 9e9 then
+			if magnitude < 9e9 then
 				local Point, OnScreen = game:GetService("Workspace").CurrentCamera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
 				if OnScreen and notInWall(v.Character.HumanoidRootPart.Position,{game:GetService("Players").LocalPlayer.Character, v.Character}, configs.combat.silentaim.wallcheck) then
 					local Distance =(Vector2.new(Point.X, Point.Y) - Vector2.new(game:GetService("Players").LocalPlayer:GetMouse().X, game:GetService("Players").LocalPlayer:GetMouse().Y)).magnitude
-					if Distance <= configs.combat.silentaim.radius then
+					if Distance < configs.combat.silentaim.radius then
 						Target = v
 					end
 				end
 			end
         end
     end
-	print(Target)
     return Target
 end)
 client.getPlayerVehicle = (function(plrname)
@@ -1162,22 +1274,83 @@ client.launchArrestAura = (function()
 	repeat task.wait(0.15)
 		local plr = getNearestPlayerNoCuffed()
 		if plr then
-				--local gle = client.itemsys.GetLocalEquipped()
-				--if gle and gle.__ClassName:find("Handcuffs") then 
-					client.attemptarrest(game:GetService("Players"):FindFirstChild(tostring(plr)))
-				--end
+			client.attemptarrest(game:GetService("Players"):FindFirstChild(tostring(plr)))			
 		end
 	until configs.combat.arrestaura.enabled == false
 end)
 
+client.updateToOriginalChassisStats = (function()
+	local gvp = require(game:GetService("ReplicatedStorage").Vehicle.VehicleUtils).GetLocalVehiclePacket() 
+	if gvp ~= nil and client.lastvehiclestats ~= nil and client.lastvehiclemodel ~= nil and gvp.Model ~= gvp.lastvehiclemodel then
+		local stats = client.lastvehiclestats
+		if configs.vehicle.engine == false then
+			gvp.GarageEngineSpeed = stats.GarageEngineSpeed
+		end
+		-- if configs.vehicle.brake == false then
+		-- 	gvp.GarageBrakes = stats.GarageBrakes
+		-- end
+		if configs.vehicle.suspension == false then
+			gvp.Height = stats.Height
+		end
+		if configs.vehicle.turn == false then
+			gvp.TurnSpeed = stats.TurnSpeed
+		end
+	end
+
+end)
+
+client.changeHitboxRadius = (function(radius)
+	setreadonly(client.combatconst, isreadonly(client.combatconst) and false)
+	client.combatconst.DEFAULT_ROOT_PART_HIT_RADIUS = radius
+end)
+
+client.hookNearestObj = (function()
+	local cframe = client.ropedata.nearestObj.PrimaryPart.CFrame:PointToObjectSpace(require(game:GetService("ReplicatedStorage"):WaitForChild("Std"):WaitForChild("GeomUtils")).closestPointInPart(client.ropedata.nearestObj.PrimaryPart, client.ropedata.obj.Position))
+	client.ropedata.manifest.reqLinkRemote:FireServer(client.ropedata.nearestObj, cframe)
+end)
+
+client.onHitSurfaceHook = (function()
+	if configs.combat.increasetakedowndamage then
+		local a = client.itemsys.GetLocalEquipped()
+		if a.FakeName ~= "Sniper" then
+			a.FakeName = "Sniper"
+		end
+		repeat wait() until a.BulletEmitter ~= nil
+		setconstant(a.BulletEmitter.OnHitSurface._handlerListHead._fn, 75, "FakeName")
+	end
+end)
+
 task.spawn(function()
+	-- Hooking
+	setupvalue(jbremote.FireServer, 1, function(key,...) -- anti cheat bipasss
+		local args = {...}
+		if #args == 2 and debug.traceback():find("LocalScript:1343") then return end
+		return oldjbremote(key, ...)
+	end)
+
+	client.hittargetwithspeed = (function(...)
+		local args = {...}
+		if configs.combat.forcefieldnomiss then
+			args[3] = 0
+		end
+		return client.ori.hittargetwithspeed(unpack(args))
+	end)	
+
+	old2 = hookfunction(client.bulletonlocalhitplayer, function(...)
+		local args = {...}
+		if configs.combat.alwaysheadshot then
+			args[15].isHeadshot = true
+			args[15].isWallbang = false
+		end
+		return old2(unpack(args))
+	end)
+
 	client.itemgun.Shoot = (function(self,a)
 		if configs.combat.silentaim.enabled then
-			local player = client.getNearestToCursor()
-			local character = player and player.Character
-			local head = character and character:FindFirstChild("Head")
-			if head then
-				self.TipDirection = (head.Position - self.Tip.Position).Unit
+			local character = client.getNearestToCursor() and client.getNearestToCursor().Character
+			local hrp = character and character:FindFirstChild("HumanoidRootPart")
+			if hrp then
+				self.TipDirection = (hrp.Position - self.Tip.Position).Unit
 			end
 		end
 		client.ori.shoot(self, a)
@@ -1185,34 +1358,73 @@ task.spawn(function()
 
 	client.plasmagun.ShootOther = (function(self,a)
 		if configs.combat.silentaim.enabled and configs.combat.silentaim.includeplasma then
-			local player = client.getNearestToCursor()
-			local character = player and player.Character
-			local head = character and character:FindFirstChild("Head")
-			if head then
-				self.TipDirection = (head.Position - self.Tip.Position).Unit
+			local character = client.getNearestToCursor() and client.getNearestToCursor().Character
+			local hrp = character and character:FindFirstChild("HumanoidRootPart")
+			if hrp then
+				self.TipDirection = (hrp.Position - self.Tip.Position).Unit
 			end
 		end
 		client.ori.plasmashootother(self,a)
 	end)
 
+	client.tase.Tase = (function(self,...)
+		if configs.combat.tasermodz then 
+			self._lastDraw = 0 
+		end
+		return client.ori.tase(self,...)
+	end)
+
 	client.raycast.RayIgnoreNonCollideWithIgnoreList = (function(...)
+		-- yes this is actually from min & brizzy silent aim script cuz i'm starting to get lazy soo yea credits to him!
+		-- maybe if i'm not lazy then i will start to make my own
 		if debug.traceback():find("Taser") and configs.combat.silentaim.enabled and configs.combat.silentaim.includetaser then
-			local player = client.getNearestToCursor()
-			local character = player and player.Character
-			local head = character and character:FindFirstChild("HumanoidRootPart")
-			if head then
-				return head, head.Position, head.Position
+			local character = client.getNearestToCursor() and client.getNearestToCursor().Character
+			local hrp = character and character:FindFirstChild("HumanoidRootPart")
+			if hrp then
+				return hrp, hrp.Position, hrp.Position, ... -- not doing args table thing cuz that didn't work for some reason (skill issue tbh)
 			end
 		end
 		return client.ori.rayignore(...)
 	end)
 
-	client.pistolitem.SetupModel = function(self,...)
-		client.ori.pistolsetupmodel(self,...)
-		if configs.combat.pistolswat then
-			self._hasSWAT = true
+	client.raycast.RayIgnoreNonCollide = (function(...)
+		local args = {...}
+		if configs.vehicle.driveonwater and debug.traceback():find("AlexChassis") then
+			args[6] = true
 		end
-	end
+		return client.ori.rayignorenon(unpack(args))
+	end)
+
+	client.gamepasssystem.doesPlayerOwnCached = (function(...)
+		local args = {...}
+		if configs.combat.pistolswat and tostring(args[1]) == game:GetService("Players").LocalPlayer.Name and debug.traceback():find("tem.Pistol") then
+			return true
+		end
+		return client.ori.doesplayerowncached(...)
+	end)
+
+	client.gunutil.getEquipTime = (function(...)
+		return configs.combat.noequipt and 0 or client.ori.getequiptime(...)
+	end)
+
+	client.circleac.Update = (function(...) -- who knows if this is better
+		local mymom = ...
+		pcall(function()
+			client.ori.update(mymom)
+			if configs.player.nocircwait then
+				client.circleac.Spec.PressedAt = 0.01
+			end
+		end)
+	end)
+
+	client.paraglide.IsFlying = (function(...)
+		return configs.player.nosky and debug.traceback():find("Falling") and true or client.ori.isflying(...)
+	end)
+
+	client.vehiclelinkbinder._constructor._updateSeeking = (function(ropedata)
+		client.ropedata = ropedata
+		return client.ori.updateseeking(ropedata)
+	end)
 
 	game:GetService("Players").LocalPlayer:GetMouse().Move:Connect(function()
 		local Mouse = game:GetService"UserInputService":GetMouseLocation()
@@ -1231,38 +1443,65 @@ task.spawn(function()
     end)
 	game:GetService("UserInputService").JumpRequest:Connect(function()
 		if configs.player.infjump then
-			game:GetService "Players".LocalPlayer.Character:FindFirstChildOfClass 'Humanoid':ChangeState("Jumping")
+			game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+		end
+	end)
+	game:GetService("Players").LocalPlayer.PlayerGui.ChildAdded:Connect(function(mama)
+		if mama.Name == "LoadingBarGui" then
+			if client.ropedata.nearestObj ~= nil then
+				if configs.vehicle.instanttow and client.ropedata.obj.Name == "MetalHook" then
+					client.hookNearestObj()
+				elseif configs.vehicle.helipick and client.ropedata.obj.Name == "RopePull" then
+					client.hookNearestObj()
+				end
+			end
+			print("wow mama is exist in playergui!@!!!!") -- idk what happened here 
+		end
+	end)
+	game.Lighting.ChildAdded:connect(function(mama)
+		if configs.combat.snipernoblur and mama.Name == "Blur" then
+			mama:GetPropertyChangedSignal("Size"):connect(function()
+				mama.Enabled = false
+			end)
 		end
 	end)
 	client.onvehicleentered:Connect(function(arg1)
 		client.vehicleEntered = true
+		if arg1.Model ~= client.lastvehiclemodel and arg1.Type == "Chassis" then
+			client.lastvehiclemodel = arg1.Model
+			--table.clear(client.lastvehiclestats)
+			client.lastvehiclestats.GarageEngineSpeed = arg1.GarageEngineSpeed
+			client.lastvehiclestats.TurnSpeed = arg1.TurnSpeed
+			client.lastvehiclestats.Height = arg1.Height
+			print("changed")
+		end
 		if configs.vehicle.ftog then
 			client.launchVehicleFlight()
 		end
 		if arg1.Type == "Heli" then
-			if configs.vehicle.heliheight then
-				arg1.MaxHeight = 9e9
-			end
-			if configs.vehilce.helibreak then
-				arg1.FallOutOfSkyDuration = 0
-				arg1.DisableDuration = 0
-			end
+			arg1.MaxHeight = configs.vehicle.heliheight and 9e9 or 400
+			arg1.FallOutOfSkyDuration = configs.vehicle.helibreak and 0 or 10
+			arg1.DisableDuration = configs.vehicle.helibreak and 0 or 10
 		elseif arg1.Type == "Chassis" then
-			if configs.vehicle.nopop then
-				arg1.TirePopDuration  = 0
-				arg1.DisableDuration  = 0
-				arg1.TirePopProportion  = 0
-			end
+			arg1.TirePopDuration = configs.vehicle.nopop and 0 or 7.5
+			arg1.DisableDuration = configs.vehicle.nopop and 0 or 7.5
+			arg1.TirePopProportion = configs.vehicle.nopop and 0 or 0.5
 		end
 	end)
 	client.onvehicleexited:Connect(function()
 		client.vehicleEntered = false
 	end)
-	client.onlocalitemequipped:Connect(function(equippeddata) -- bro this shit is sometime broke sometimes not and it makes me wanna crash out to fix it
+	client.onlocalitemequipped:Connect(function(equippeddata) 
 		--client.originalequippeddata = equippeddata
 		local getdata = client.getOldWeaponData
 		local a = client.itemsys.GetLocalEquipped()
-		if getdata(a.__ClassName, "EquipTime") ~= nil then
+		if a.FakeName ~= "Sniper" then
+			a.FakeName = "Sniper"
+		end
+		task.spawn(function()
+			client.onHitSurfaceHook()
+		end)
+		if getdata(a.__ClassName, "EquipTime") ~= nil then -- just realized that this shit didn't do anything 😑
 			a.Config.EquipTime = configs.combat.noequipt and 0 or getdata(a.__ClassName, "EquipTime")
 		end
 		if getdata(a.__ClassName, "FireAuto") ~= nil then
@@ -1272,67 +1511,69 @@ task.spawn(function()
 			a.Config.BulletSpread = configs.combat.nospread and 0 or getdata(a.__ClassName, "BulletSpread")
 		end
 		if getdata(a.__ClassName, "CamShakeMagnitude") ~= nil then
-			a.Config.CamShakeMagnitude = configs.combat.nospread and 0 or getdata(a.__ClassName, "CamShakeMagnitude")
+			a.Config.CamShakeMagnitude = configs.combat.norecoil and 0 or getdata(a.__ClassName, "CamShakeMagnitude")
+		end
+		if a.__ClassName == "Taser" and getdata(a.__ClassName, "ReloadTimeHit") ~= nil and getdata(a.__ClassName, "ReloadTime") ~= nil then
+			a.Config.ReloadTimeHit = configs.combat.tasermodz and 0 or getdata(a.__ClassName, "ReloadTimeHit")
+			a.Config.ReloadTime = configs.combat.tasermodz and 0 or getdata(a.__ClassName, "ReloadTime")
 		end
 		if a and a.BulletEmitter and a.BulletEmitter.GravityVector then
 			a.BulletEmitter.GravityVector = configs.combat.nobulletg and nil or Vector3.new(0, -workspace.Gravity / 10, 0)
 		end
 	end)
-	-- client.onlocalitemunequipped:Connect(function()
-	-- 	if client.originalequippeddata ~= nil then
-	-- 		local ori = client.originalequippeddata
-	-- 		local a = client.itemsys.GetLocalEquipped()
-	-- 		a.Config.EquipTime = ori.Config.EquipTime
-	-- 		a.Config.FireAuto = 
-	-- 	end
-	-- end)
+
 	task.spawn(function()
 		while true do task.wait()
-			local humanoid = game:GetService("Players").LocalPlayer.Character.Humanoid or nil
-			local gvp = require(game:GetService("ReplicatedStorage").Vehicle.VehicleUtils).GetLocalVehiclePacket() or nil
-			if humanoid ~= nil and gvp ~= nil then
-				if gvp.Type == "Chassis" then
-					if configs.vehicle.engine then
-						gvp.GarageEngineSpeed = configs.vehicle.enginesp
-					end
-					if configs.vehicle.brake then
-						gvp.GarageBrakes = configs.vehicle.brakesp
-					end
-					if configs.vehicle.suspension then
-						gvp.Height = configs.vehicle.suspensionhe
-					end
-					if configs.vehicle.turn then
-						gvp.TurnSpeed = configs.vehicle.turnsp
+			pcall(function()
+				local humanoid = game:GetService("Players").LocalPlayer.Character.Humanoid or nil
+				local gvp = require(game:GetService("ReplicatedStorage").Vehicle.VehicleUtils).GetLocalVehiclePacket() or nil
+				if humanoid ~= nil and gvp ~= nil and client.vehicleEntered then
+					if gvp.Type == "Chassis" then
+						if configs.vehicle.engine then
+							gvp.GarageEngineSpeed = configs.vehicle.enginesp
+						end
+						-- if configs.vehicle.brake then
+						-- 	gvp.GarageBrakes = configs.vehicle.brakesp
+						-- end
+						if configs.vehicle.suspension then
+							gvp.Height = configs.vehicle.suspensionhe
+						end
+						if configs.vehicle.turn then
+							gvp.TurnSpeed = configs.vehicle.turnsp
+						end
 					end
 				end
-			end
+			end)
 		end
 	end)
 end)
 
 
+local FolderName = "Jailbreak secret dev tool"
+local FileName = FolderName.."\\configs.json"
 
-local ui =eleriumremake.SetupUI("very epic secret jailbreak dev tool real 100%")
+
+local ui =eleriumremake.SetupUI("bru what", function() end)
 
 local page = ui.NewPage("Players")
 
 -- // Character
 local sec = page.NewSection("Character")
-sec.NewSlider("Walkspeed", 0, 10, 5, true, function(a)
+sec.NewSlider("Walkspeed", 0, 10, 5, configs.player.walkval, function(a)
 	configs.player.walkval = a
 end)
 sec.NewToggle("Enable Walkspeed", function(a)
 	configs.player.walktog = a
-end, false)
+end, configs.player.walktog)
 sec.NewToggle("Inf Jump", function(a)
 	configs.player.infjump = a
-end, false)
+end, configs.player.infjump)
 
 -- // Utilities
 local sec = page.NewSection("Utilities")
 sec.NewToggle("Automatic Escape(BETA)", function(a)
 	configs.player.autoescape = a
-end, false)
+end, configs.player.autoescape)
 sec.NewToggle("No Ragdoll", function(a)
 	configs.player.norag = a
 	local hrp = game:GetService("Players").LocalPlayer.Character:WaitForChild("HumanoidRootPart") or nil
@@ -1341,7 +1582,7 @@ sec.NewToggle("No Ragdoll", function(a)
 	elseif configs.player.norag == true and hrp ~= nil then
 		hrp:AddTag("NoRagdoll")
 	end
-end, false)
+end, configs.player.norag)
 sec.NewToggle("No Fall Injury", function(a)
 	configs.player.nofall = a
 	local hrp = game:GetService("Players").LocalPlayer.Character:WaitForChild("HumanoidRootPart") or nil
@@ -1350,36 +1591,42 @@ sec.NewToggle("No Fall Injury", function(a)
 	elseif configs.player.nofall == true and hrp ~= nil then
 		hrp:AddTag("NoFallDamage")
 	end
-end, false)
+end, configs.player.nofall)
 sec.NewToggle("No Skydive", function(a)
 	configs.player.nosky = a
-end, false)
-sec.NewToggle("No Taser Stun", function(a)
+end, configs.player.nosky)
+sec.NewToggle("No Ragdoll Stun", function(a)
 	configs.player.nostun = a
 	client.settingss.Time.Stunned = configs.player.nostun and 0 or 5
-end, false)
+	setupvalue(client.stunnedragdoll, 1, configs.player.nostun and nil)
+end, configs.player.nostun)
+
 -- sec.NewToggle("No Punch Wait", function(a) 
 -- 	configs.player.nopwait = a
 -- end, false)
 sec.NewToggle("No Roll Wait", function(a)
 	configs.player.norwait = a
 	client.activeaction.roll.useEvery = configs.player.norwait and 0 or 5
-end, false)
+end, configs.player.norwait)
+sec.NewToggle("No Crawling Slow", function(a)
+	configs.player.nocslow = a
+	setconstant(client.walkspeedfun, 16, configs.player.nocslow and 1 or 0.4)
+end, configs.player.nocslow)
 sec.NewToggle("No Circle Hold", function(a)
 	configs.player.nocircwait = a
-	setconstant(client.circleac.Press, 3, a and "hahaifuckedyourmomlastnight" or "Timed")
-end, false)
+	--setconstant(client.circleac.Press, 3, a and "yousuck" or "Timed")
+end, configs.player.nocircwait)
 sec.NewToggle("No Injury Slow", function(a)
 	configs.player.noislow = a
 	setconstant(client.walkspeedfun, 8, configs.player.noislow and 1 or 0.5)
-end, false)
+end, configs.player.noislow)
 sec.NewToggle("No Spotlight Slow", function(a)
 	configs.player.nospslow = a
 	setconstant(client.walkspeedfun, 35, configs.player.nospslow and 1 or 0.8)
-end, false)
-sec.NewToggle("No Shield Swat Slow", function(a)
-	configs.player.noswatslow = a
-end, false)
+end, configs.player.nospslow)
+-- sec.NewToggle("No Shield Swat Slow", function(a)
+-- 	configs.player.noswatslow = a
+-- end, configs.player.noswatslow)
 -- sec.NewToggle("Always Punch", function(a)
 -- 	configs.player.alwaysp = a
 -- 	if configs.player.alwaysp == true then
@@ -1389,31 +1636,28 @@ end, false)
 -- sec.NewToggle("Always Silent Punch", function(a)
 -- 	configs.player.alwayssilentp = a
 -- end, false)
--- sec.NewToggle("Always Party", function(a)
--- 	configs.player.juiced = a
--- end, false)
 sec.NewToggle("Always Keycard", function(a)
 	configs.player.bypasskd = a
 	client.hasKeyCorrection(configs.player.bypasskd)
-end, false)
+end, configs.player.bypasskd)
 sec.NewToggle("Allow Equip While Crawling", function(a)
 	configs.player.crawlequip = a
 	if configs.player.crawlequip then
 		client.isCrawlingCorrection()
 	end
-end, false)
+end, configs.player.crawlequip)
 sec.NewToggle("Allow Walk When Arrested", function(a)
 	configs.player.allowwalkcuffed = a
-end, false)
-sec.NewToggle("Break Your Back Bone(will make unable to crawl )", function(a)
+end, configs.player.allowwalkcuffed)
+sec.NewToggle("Break Your Back Bone", function(a)
 	configs.player.backbone = a
 	if configs.player.backbone then
 		client.duckCorrection()
 	end
-end, false)
+end, configs.player.backbone)
 sec.NewToggle("Get Avatar Outfit On Respawn", function(a)
 	configs.player.getclothes = a
-end, false)
+end, configs.player.getclothes)
 sec.NewButton("Get Avatar Outfit", function()
 
 end)
@@ -1422,14 +1666,14 @@ sec.NewButton("Get Police Outfit", function()
 end)
 sec.NewLabel("NOTE: No Circle Hold might broke/not working on some actions")
 
---// Projectiles
-local sec = page.NewSection("Projectiles")
-sec.NewToggle("Disable Military Turret", function(a)
+-- --// Projectiles
+-- local sec = page.NewSection("Projectiles")
+-- sec.NewToggle("Disable Military Turret", function(a)
 	
-end, false)
-sec.NewToggle("Disable House Turret", function(a)
+-- end, false)
+-- sec.NewToggle("Disable House Turret", function(a)
 	
-end, false)
+-- end, false)
 
 
 -- // Vehicle Page
@@ -1437,99 +1681,119 @@ local page = ui.NewPage("Vehicle")
 
 -- // Utilities
 local sec = page.NewSection("Utilities")
-sec.NewSlider("Flight Speed", 10, 1000, 10, true, function(a)
+sec.NewSlider("Flight Speed", 10, 1000, configs.vehicle.fspeed, true, function(a)
 	configs.vehicle.fspeed = a
+end)
+sec.NewSlider("Flight Rotation X", 0, 360, configs.vehicle.fx, false, function(a)
+	configs.vehicle.fx = a
+end)
+sec.NewSlider("Flight Rotation Y", 0, 360, configs.vehicle.fy, false, function(a)
+	configs.vehicle.fy = a
+end)
+sec.NewSlider("Flight Rotation Z", 0, 360, configs.vehicle.fz, false, function(a)
+	configs.vehicle.fz = a
 end)
 sec.NewToggle("Vehicle Flight", function(a)
 	configs.vehicle.ftog = a
 	if configs.vehicle.ftog and client.vehicleEntered == true then
 		client.launchVehicleFlight()
 	end
-end, false)
+end, configs.vehicle.ftog)
 sec.NewToggle("Infinite Nitro", function(a)
 	configs.vehicle.infnitro = a
 	if configs.vehicle.infnitro then
 		client.nitroCorrection()
 	end
-end, false)
+end, configs.vehicle.infnitro)
 sec.NewToggle("Random Infinite Nitro", function(a)
 	configs.vehicle.rinfnitro = a
-end, false)
+end, configs.vehicle.rinfnitro)
 sec.NewToggle("Always Nitro", function(a)
 	configs.vehicle.alwaysnit = a	
-end, false)
+end, configs.vehicle.alwaysnit)
 sec.NewToggle("No Hijack Vehicle", function(a)
 	configs.vehicle.alwayshij = a
-end, false)
--- sec.NewToggle("Rainbow Vehicle(CS)", function(a)
--- 	configs.vehicle.rainbowv = a
--- end, false)
+end, configs.vehicle.alwayshij)
+
 -- sec.NewToggle("Automatic Lock Vehicle", function(a)
 -- 	configs.vehicle.autolock = a
 -- end, false)
 
 -- // Car Modification
 local sec = page.NewSection("Car Mods")
-sec.NewSlider("Engine Speed", 1, 200, 1, false, function(a)
+sec.NewSlider("Engine Speed", 1, 200, configs.vehicle.enginesp, false, function(a)
 	configs.vehicle.enginesp = a
 end)
 sec.NewToggle("Apply Engine Speed", function(a)
 	configs.vehicle.engine = a
-end, false)
-sec.NewSlider("Brake Speed", 1, 5, 1, true, function(a)
-	configs.vehicle.brakesp = a
-end)
-sec.NewToggle("Apply Brake Speed", function(a)
-	configs.vehicle.brake = a
-end, false)
-sec.NewSlider("Suspension Height", 1, 150, 5, false, function(a)
+	if configs.vehicle.engine == false then
+		client.updateToOriginalChassisStats()
+	end
+end, configs.vehicle.engine)
+-- sec.NewSlider("Brake Speed", 1, 5, configs.vehicle.brakesp, true, function(a)
+-- 	configs.vehicle.brakesp = a
+-- end)
+-- sec.NewToggle("Apply Brake Speed", function(a)
+-- 	configs.vehicle.brake = a
+-- end, configs.vehicle.brake)
+sec.NewSlider("Suspension Height", 1, 150, configs.vehicle.suspensionhe, false, function(a)
 	configs.vehicle.suspensionhe = a
 end)
 sec.NewToggle("Apply Suspension Height", function(a)
 	configs.vehicle.suspension = a
-end, false)
-sec.NewSlider("Turn Speed", 1, 5, 1, true, function(a)
+	if configs.vehicle.suspension == false then
+		client.updateToOriginalChassisStats()
+	end
+end, configs.vehicle.suspension)
+sec.NewSlider("Turn Speed", 1, 5, configs.vehicle.turnsp, true, function(a)
 	configs.vehicle.turnsp = a
 end)
 sec.NewToggle("Apply Turn Speed", function(a)
 	configs.vehicle.turn = a
-end, false)
+	if configs.vehicle.suspension == false then
+		client.updateToOriginalChassisStats()
+	end
+end, configs.vehicle.turn)
 sec.NewToggle("Anti Tire Pop", function(a)
 	configs.vehicle.nopop = a
 	-- if configs.vehicle.nopop then
 	-- 	client.popCorrection()
 	-- end
-end, false)
-sec.NewToggle("Spam Headlights", function(a)
-	configs.vehicle.spamhead = a
-end, false)
+end, configs.vehicle.nopop)
 sec.NewToggle("Automatic Flip", function(a)
 	configs.vehicle.autoflip = a
 	if configs.vehicle.autoflip then
 		client.flipCorrection()
 	end
-end, false)
+end, configs.vehicle.autoflip)
+sec.NewToggle("Instant Tow", function(a)
+	configs.vehicle.instanttow = a
+end, configs.vehicle.instanttow)
+sec.NewToggle("Drive On Water", function(a)
+	configs.vehicle.driveonwater = a
+	setconstant(client.alexchassis.UpdateEngine, 280, configs.vehicle.driveonwater and 1 or 0.625)
+end, configs.vehicle.driveonwater)
 
 --// Helicopter Mods
 local sec = page.NewSection("Heli Mods")
-sec.NewSlider("Engine Speed", 0, 1000, 0, false, function(a)
-	configs.vehicle.helienginesp = a
+sec.NewSlider("Engine Speed", 1, 100, configs.vehicle.helienginesp, false, function(a)
+	configs.vehicle.helienginesp = a / 1000
 end)
-sec.NewToggle("Apply Engine Speed", function(a)
-	configs.vehicle.heliengine = a
-end, false)
+-- sec.NewToggle("Apply Engine Speed", function(a)
+-- 	configs.vehicle.heliengine = a
+-- end, false)
 sec.NewToggle("Infinite Height", function(a)
 	configs.vehicle.heliheight = a
-end, false)
+end, configs.vehicle.heliheight)
 sec.NewToggle("Anti Heli Break", function(a)
 	configs.vehicle.helibreak = a
 	if configs.vehicle.helibreak then
 		client.heliBreakCorrection()
 	end
-end, false)
-sec.NewToggle("Instant Heli Pickup", function(a)
+end, configs.vehicle.helibreak)
+sec.NewToggle("Instant Pickup", function(a)
 	configs.vehicle.helipick = a
-end, false)
+end, configs.vehicle.helipick)
 
 
 -- // Combat Page
@@ -1540,32 +1804,48 @@ local page = ui.NewPage("Combats")
 local sec = page.NewSection("Weapons")
 sec.NewToggle("Always Auto", function(a)
 	configs.combat.alwaysauto = a
-end, false)
+end, configs.combat.alwaysauto)
 sec.NewToggle("No Recoil", function(a)
 	configs.combat.norecoil = a
-end, false)
+end, configs.combat.norecoil)
 sec.NewToggle("No Spread", function(a)
 	configs.combat.nospread = a
-end, false)
+end, configs.combat.nospread)
 sec.NewToggle("No Bullet Gravity", function(a)
 	configs.combat.nobulletg = a
-end, false)  
+end, configs.combat.nobulletg)  
 sec.NewToggle("No Equip Time", function(a)
 	configs.combat.noequipt = a
-end, false)
-sec.NewToggle("No Scope Gui", function(a)
-	
-end, false)
-sec.NewToggle("No Grenade Smoke", function(a)
-	
-end, false)
+end, configs.combat.noequipt)
 sec.NewToggle("Wallbang", function(a)
-	
-end, false)
+	configs.combat.wallbang = a
+end, configs.combat.wallbang)
 sec.NewToggle("Headshot Only", function(a)
 	configs.combat.alwaysheadshot =a
-	client.headshotCorrection(configs.combat.alwaysheadshot)
+	--client.headshotCorrection(configs.combat.alwaysheadshot)
+end, configs.combat.alwaysheadshot)
+sec.NewToggle("Increase Takedown Damage", function(a)
+	configs.combat.increasetakedowndamage =a
+end, configs.combat.increasetakedowndamage)
+sec.NewToggle("Free Pistol Swat", function(a)
+	configs.combat.pistolswat = a
+end, configs.combat.pistolswat)
+sec.NewToggle("Fast Taser", function(a)
+	configs.combat.tasermodz = a
+end, configs.combat.tasermodz)
+sec.NewToggle("Forcefield Anti Misses", function(a) -- if you don't know what this does, it basically makes your forcefield ball/bullet always hitting yourself
+	configs.combat.forcefieldnomiss = a
+end, configs.combat.forcefieldnomiss)
+sec.NewToggle("No Sniper Scope Gui", function(a)
+	configs.combat.snipernogui = a
 end, false)
+sec.NewToggle("No Sniper Scope Blur", function(a)
+	configs.combat.snipernoblur = a
+end, false)
+sec.NewToggle("No Grenade Smoke", function(a)
+	configs.combat.nogrenadesmoke = a
+	client.smokeGrenadeHook(configs.combat.nogrenadesmoke)
+end, configs.combat.nogrenadesmoke)
 -- sec.NewToggle("Increase Vehicle & Forcefield Bullet Damage", function(a)
 
 -- end, false)
@@ -1577,29 +1857,30 @@ end)
 
 
 --// Sword & Baton
-local sec = page.NewSection("Sword & Baton")
-sec.NewToggle("No Swing Wait", function(a)
+local sec = page.NewSection("Melee")
+sec.NewToggle("No Reload Time", function(a)
 	configs.combat.batonsword.noreloadtime = a
 	if configs.combat.batonsword.noreloadtime then
 		client.setBatonSwordTime(configs.combat.batonsword.noreloadtime)
 	end
-end, false)
+end, configs.combat.batonsword.noreloadtime)
 
 sec.NewToggle("Always Swoosh", function(a)
 	configs.combat.batonsword.spamswoosh = a
 	if configs.combat.batonsword.spamswoosh then
 		client.spamBatonSwordSwoosh()
 	end
-end, false)
+end, configs.combat.batonsword.spamswoosh)
 sec.NewToggle("Always Lunge", function(a)
 	configs.combat.batonsword.spamlunge = a
 	if configs.combat.batonsword.spamlunge then
 		client.spamBatonSwordLunge()
 	end
-end, false)
+end, configs.combat.batonsword.spamlunge)
 
---// Silent Aim
-local sec = page.NewSection("Silent Aim")
+--// Silent Aim [please don't use this cuz it sucks trust me]
+local sec = page.NewSection("Silent Aim [Unoptimized]")
+
 sec.NewToggle("Enabled", function(a)
 	configs.combat.silentaim.enabled = a
 end, false)
@@ -1631,20 +1912,26 @@ end)
 local sec = page.NewSection("Arrest Aura")
 -- sec.NewLabel("NOTE: this features is not optimized well and rushed")
 -- sec.NewLabel("soo expect some bugs occuring")
-sec.NewLabel("not done yet lmao")
 sec.NewToggle("Enabled", function(a)
 	configs.combat.arrestaura.enabled = a
 	if configs.combat.arrestaura.enabled then
 		client.launchArrestAura()
 	end	
-end, false)
+end, configs.combat.arrestaura.enabled)
 
 
-local sec = page.NewSection("Tase Aura")
-sec.NewLabel("not done yet lmao")
-sec.NewSlider("Tase Distance", 10, 85, 25, false, function(a)
+-- local sec = page.NewSection("Tase Aura")
+-- sec.NewLabel("not done yet lmao")
+-- sec.NewSlider("Tase Distance", 10, 85, 25, false, function(a)
 	
+-- end)
+-- sec.NewToggle("Enabled", function(a)
+	
+-- end, false)
+
+
+local sec = page.NewSection("Others")
+sec.NewSlider("Hitbox Radius", 3, 50, configs.combat.hitboxradius, true, function(a)
+	configs.combat.hitboxradius = a
+	client.changeHitboxRadius(configs.combat.hitboxradius)
 end)
-sec.NewToggle("Enabled", function(a)
-	
-end, false)
