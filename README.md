@@ -1,5 +1,2 @@
-## Changelog 29/3/2025
-```
-bunch of features added + bug fixes
-
-```
+deprecated, please use this instead
+https://github.com/Breadido/Codecoat
